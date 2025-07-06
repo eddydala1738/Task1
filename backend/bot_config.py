@@ -47,19 +47,25 @@ class BotConfiguration:
                 "rules": "Please check out the rules in <#1234567890123456789>.",
                 "join": "To join roles or channels, use `/join` command for instructions!",
                 "welcome": "Welcome to the server! Please read the rules first.",
-                "support": "For support, please contact the moderators or use the support channel."
+                "support": "For support, please contact the moderators or use the support channel.",
+                "order": "To place an order, use `/place_order` command!",
+                "payment": "We accept PayPal payments. Use `/place_order` to start!",
+                "status": "Check your order status with `/order_status` or `/my_orders`!"
             },
             "channels": {
                 "rules": "1234567890123456789",
                 "general": "1234567890123456789",
                 "welcome": "1234567890123456789",
-                "support": "1234567890123456789"
+                "support": "1234567890123456789",
+                "orders": "1234567890123456789"
             },
             "settings": {
                 "prefix": "!",
                 "case_sensitive": False,
                 "respond_to_mentions": True,
-                "log_commands": True
+                "log_commands": True,
+                "max_order_quantity": 100,
+                "min_product_name_length": 2
             },
             "slash_commands": {
                 "help": {
@@ -77,7 +83,27 @@ class BotConfiguration:
                 "ping": {
                     "description": "Checks if the bot is responding",
                     "enabled": True
+                },
+                "place_order": {
+                    "description": "Place a new order for products",
+                    "enabled": True
+                },
+                "my_orders": {
+                    "description": "View your order history",
+                    "enabled": True
+                },
+                "order_status": {
+                    "description": "Check status of a specific order",
+                    "enabled": True
                 }
+            },
+            "order_settings": {
+                "payment_methods": ["PayPal"],
+                "default_payment_method": "PayPal",
+                "order_number_format": "ORD-{:03d}",
+                "admin_roles": ["admin", "moderator", "mod"],
+                "notification_enabled": True,
+                "max_orders_per_user": 50
             }
         }
     
@@ -96,6 +122,10 @@ class BotConfiguration:
     def get_slash_commands(self) -> Dict[str, Dict[str, Any]]:
         """Get slash commands configuration"""
         return self.config.get("slash_commands", {})
+    
+    def get_order_settings(self) -> Dict[str, Any]:
+        """Get order-specific settings"""
+        return self.config.get("order_settings", {})
     
     def update_keyword_response(self, keyword: str, response: str):
         """Update a keyword response"""

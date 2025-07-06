@@ -26,20 +26,27 @@ class BotConfig:
         self.keywords_responses = {
             "help": "Here are the available commands! Use `/help` for more details.",
             "rules": "Please check out the rules in <#1234567890123456789>.",
-            "join": "To join roles or channels, use `/join` command for instructions!"
+            "join": "To join roles or channels, use `/join` command for instructions!",
+            "order": "To place an order, use `/place_order` command!",
+            "payment": "We accept PayPal payments. Use `/place_order` to start!",
+            "status": "Check your order status with `/order_status` or `/my_orders`!"
         }
         
         self.channels = {
             "rules": "1234567890123456789",  # Replace with actual channel ID
             "general": "1234567890123456789",  # Replace with actual channel ID
-            "welcome": "1234567890123456789"  # Replace with actual channel ID
+            "welcome": "1234567890123456789",  # Replace with actual channel ID
+            "orders": "1234567890123456789"   # Replace with actual channel ID
         }
         
         self.slash_commands_help = {
             "/help": "Shows this help message with available commands",
             "/rules": "Redirects you to the rules channel",
             "/join": "Shows instructions on how to join roles or channels",
-            "/ping": "Checks if the bot is responding"
+            "/ping": "Checks if the bot is responding",
+            "/place_order": "Place a new order for products",
+            "/my_orders": "View your order history",
+            "/order_status": "Check status of a specific order"
         }
 
 config = BotConfig()
@@ -61,6 +68,29 @@ class DiscordBot(commands.Bot):
         """This is called when the bot is starting up"""
         logger.info(f"Bot is starting up...")
         
+        # Initialize order manager
+        try:
+            from order_manager import order_manager
+            await order_manager.initialize_db()
+            logger.info("Order database initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize order database: {e}")
+        
+        # Load cogs
+        try:
+            from bot_cogs import setup_cogs
+            await setup_cogs(self)
+            logger.info("Basic cogs loaded")
+        except Exception as e:
+            logger.error(f"Failed to load basic cogs: {e}")
+        
+        try:
+            from order_cogs import setup_order_cogs
+            await setup_order_cogs(self)
+            logger.info("Order cogs loaded")
+        except Exception as e:
+            logger.error(f"Failed to load order cogs: {e}")
+        
         # Sync slash commands
         try:
             synced = await self.tree.sync()
@@ -77,7 +107,7 @@ class DiscordBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="for messages | /help"
+                name="for orders & messages | /help"
             )
         )
     
@@ -110,7 +140,7 @@ class DiscordBot(commands.Bot):
 # Create bot instance
 bot = DiscordBot()
 
-# Slash Commands
+# Basic slash commands (additional ones are in cogs)
 @bot.tree.command(name="help", description="Shows available commands and help information")
 async def help_command(interaction: discord.Interaction):
     """Help command showing all available commands"""
@@ -124,67 +154,37 @@ async def help_command(interaction: discord.Interaction):
     
     # Add slash commands
     embed.add_field(
-        name="📋 Slash Commands",
-        value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in config.slash_commands_help.items()]),
+        name="📋 General Commands",
+        value="`/help` - Shows this help message\n`/rules` - View server rules\n`/join` - Join instructions\n`/ping` - Check bot response",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🛍️ Order Commands",
+        value="`/place_order` - Place a new order\n`/my_orders` - View your orders\n`/order_status` - Check order status",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="👑 Admin Commands",
+        value="`/confirm_payment` - Confirm payment\n`/update_order_status` - Update order status\n`/view_orders` - View all orders\n`/search_orders` - Search orders\n`/order_report` - Generate reports",
         inline=False
     )
     
     # Add keyword responses
     embed.add_field(
         name="🔍 Keyword Responses",
-        value=f"The bot responds to these keywords in messages:\n" +
-              "\n".join([f"`{keyword}` - {response}" for keyword, response in config.keywords_responses.items()]),
+        value="The bot responds to these keywords: `help`, `rules`, `join`, `order`, `payment`, `status`",
         inline=False
     )
     
     embed.add_field(
-        name="💡 Tips",
-        value="• You can use keywords in any message\n• Slash commands work anywhere\n• Bot responds to mentions",
+        name="💡 Order Process",
+        value="1. Use `/place_order` to create order\n2. Make PayPal payment\n3. Admin confirms payment\n4. Order gets processed",
         inline=False
     )
     
-    embed.set_footer(text="Bot is ready to help!")
-    
-    await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name="rules", description="Redirects you to the rules channel")
-async def rules_command(interaction: discord.Interaction):
-    """Rules command that redirects to rules channel"""
-    logger.info(f"Rules command used by {interaction.user}")
-    
-    rules_channel_id = config.channels["rules"]
-    response = f"📋 Please check out the rules in <#{rules_channel_id}>."
-    
-    await interaction.response.send_message(response)
-
-@bot.tree.command(name="join", description="Shows instructions on how to join roles or channels")
-async def join_command(interaction: discord.Interaction):
-    """Join command with instructions"""
-    logger.info(f"Join command used by {interaction.user}")
-    
-    embed = discord.Embed(
-        title="🚪 How to Join",
-        description="Here's how you can join roles and channels:",
-        color=discord.Color.green()
-    )
-    
-    embed.add_field(
-        name="🎭 Roles",
-        value="• Use the reaction roles in <#1234567890123456789>\n• Contact a moderator for special roles\n• Check the rules first!",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="📢 Channels",
-        value="• Most channels are auto-accessible\n• Some require specific roles\n• Ask in <#1234567890123456789> for help",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="❗ Important",
-        value="Make sure to read the rules before participating!",
-        inline=False
-    )
+    embed.set_footer(text="Need help? Contact an admin or moderator!")
     
     await interaction.response.send_message(embed=embed)
 
@@ -201,23 +201,10 @@ async def ping_command(interaction: discord.Interaction):
         color=discord.Color.green()
     )
     
+    embed.add_field(name="🛍️ Order System", value="✅ Online", inline=True)
+    embed.add_field(name="📋 Commands", value="✅ Active", inline=True)
+    
     await interaction.response.send_message(embed=embed)
-
-# Traditional prefix commands (optional)
-@bot.command(name="info")
-async def info_command(ctx):
-    """Bot info command"""
-    embed = discord.Embed(
-        title="🤖 Bot Information",
-        description="Discord Bot with keyword responses and slash commands",
-        color=discord.Color.blue()
-    )
-    
-    embed.add_field(name="Guilds", value=str(len(bot.guilds)), inline=True)
-    embed.add_field(name="Users", value=str(len(bot.users)), inline=True)
-    embed.add_field(name="Commands", value=str(len(bot.tree.get_commands())), inline=True)
-    
-    await ctx.send(embed=embed)
 
 # Error handling for slash commands
 @bot.tree.error
@@ -240,7 +227,7 @@ async def main():
         logger.error("DISCORD_BOT_TOKEN not found in environment variables!")
         return
     
-    logger.info("Starting Discord bot...")
+    logger.info("Starting Discord bot with order management system...")
     
     try:
         async with bot:
