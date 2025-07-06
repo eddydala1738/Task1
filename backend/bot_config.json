@@ -1,0 +1,39 @@
+{
+    "keywords_responses": {
+        "help": "Here are the available commands! Use `/help` for more details.",
+        "rules": "Please check out the rules in <#1234567890123456789>.",
+        "join": "To join roles or channels, use `/join` command for instructions!",
+        "welcome": "Welcome to the server! Please read the rules first.",
+        "support": "For support, please contact the moderators or use the support channel."
+    },
+    "channels": {
+        "rules": "1234567890123456789",
+        "general": "1234567890123456789",
+        "welcome": "1234567890123456789",
+        "support": "1234567890123456789"
+    },
+    "settings": {
+        "prefix": "!",
+        "case_sensitive": false,
+        "respond_to_mentions": true,
+        "log_commands": true
+    },
+    "slash_commands": {
+        "help": {
+            "description": "Shows this help message with available commands",
+            "enabled": true
+        },
+        "rules": {
+            "description": "Redirects you to the rules channel",
+            "enabled": true
+        },
+        "join": {
+            "description": "Shows instructions on how to join roles or channels",
+            "enabled": true
+        },
+        "ping": {
+            "description": "Checks if the bot is responding",
+            "enabled": true
+        }
+    }
+}
