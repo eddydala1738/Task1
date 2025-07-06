@@ -149,9 +149,9 @@ class AdminCog(commands.Cog):
             logger.error(f"Error reloading config: {e}")
             await interaction.response.send_message(f"❌ Error reloading config: {e}", ephemeral=True)
     
-    @app_commands.command(name="bot_info", description="Show bot information (Admin only)")
+    @app_commands.command(name="admin_info", description="Show bot information (Admin only)")
     @app_commands.default_permissions(administrator=True)
-    async def bot_info(self, interaction: discord.Interaction):
+    async def admin_info(self, interaction: discord.Interaction):
         """Show bot information"""
         logger.info(f"Bot info requested by {interaction.user}")
         
