@@ -18,8 +18,8 @@ class GeneralCog(commands.Cog):
         self.bot = bot
         self.config = bot_config
     
-    @app_commands.command(name="help", description="Shows available commands and help information")
-    async def help_command(self, interaction: discord.Interaction):
+    @app_commands.command(name="bot_help", description="Shows available commands and help information")
+    async def bot_help_command(self, interaction: discord.Interaction):
         """Help command showing all available commands"""
         logger.info(f"Help command used by {interaction.user}")
         
