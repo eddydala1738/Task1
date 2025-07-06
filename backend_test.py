@@ -148,27 +148,30 @@ class DiscordBotTests(unittest.TestCase):
         except Exception as e:
             self.fail(f"Error testing run_bot: {e}")
 
-    @patch('discord.ext.commands.Bot')
-    @patch('discord.Client')
-    def test_bot_command_structure(self, mock_client, mock_bot):
+    def test_bot_command_structure(self):
         """Test the bot command structure"""
         try:
-            # Import the discord_bot module
-            from discord_bot import bot
+            # Check discord_bot.py for command definitions
+            discord_bot_file = self.backend_dir / 'discord_bot.py'
+            self.assertTrue(discord_bot_file.exists(), "discord_bot.py should exist")
             
-            # Test slash commands
-            tree_commands = [
-                cmd.name for cmd in getattr(bot, 'tree', MagicMock()).get_commands()
-            ]
-            
-            # Since we're mocking, we won't get actual commands
-            # But we can check if the commands are defined in the file
-            with open(self.backend_dir / 'discord_bot.py', 'r') as f:
+            with open(discord_bot_file, 'r') as f:
                 content = f.read()
                 self.assertIn('@bot.tree.command(name="help"', content, "help command should be defined")
                 self.assertIn('@bot.tree.command(name="rules"', content, "rules command should be defined")
                 self.assertIn('@bot.tree.command(name="join"', content, "join command should be defined")
                 self.assertIn('@bot.tree.command(name="ping"', content, "ping command should be defined")
+                
+            # Also check bot_cogs.py for command definitions
+            bot_cogs_file = self.backend_dir / 'bot_cogs.py'
+            self.assertTrue(bot_cogs_file.exists(), "bot_cogs.py should exist")
+            
+            with open(bot_cogs_file, 'r') as f:
+                content = f.read()
+                self.assertIn('@app_commands.command(name="help"', content, "help command should be defined in cogs")
+                self.assertIn('@app_commands.command(name="rules"', content, "rules command should be defined in cogs")
+                self.assertIn('@app_commands.command(name="join"', content, "join command should be defined in cogs")
+                self.assertIn('@app_commands.command(name="ping"', content, "ping command should be defined in cogs")
         except Exception as e:
             self.fail(f"Error testing bot command structure: {e}")
 
